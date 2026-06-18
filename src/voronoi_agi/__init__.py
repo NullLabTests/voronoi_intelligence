@@ -11,9 +11,11 @@ from .seeds import (
     PoissonDiskSeedSampler,
     GaussianSeedSampler,
     SobolSeedSampler,
+    SphericalSeedSampler,
     seed_region_area,
     seed_region_vertices,
 )
+from .agents import centroidal_voronoi_tessellation
 from .population import (
     VoronoiPopulation,
     init_population_from_seeds,
@@ -38,6 +40,7 @@ from .visualization import (
     plot_territorial_coverage,
     animate_evolution,
     voronoi_heatmap,
+    plot_high_dim_projection,
 )
 
 __all__ = [
@@ -47,6 +50,7 @@ __all__ = [
     "PoissonDiskSeedSampler",
     "GaussianSeedSampler",
     "SobolSeedSampler",
+    "SphericalSeedSampler",
     "seed_region_area",
     "seed_region_vertices",
     "VoronoiPopulation",
@@ -66,4 +70,6 @@ __all__ = [
     "plot_territorial_coverage",
     "animate_evolution",
     "voronoi_heatmap",
+    "plot_high_dim_projection",
+    "centroidal_voronoi_tessellation",
 ]

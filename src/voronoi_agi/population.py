@@ -14,7 +14,39 @@ import numpy as np
 from numpy.typing import NDArray
 from scipy.spatial import Voronoi
 
-from .seeds import SeedSampler, UniformSeedSampler
+from .seeds import (
+    SeedSampler,
+    UniformSeedSampler,
+    PoissonDiskSeedSampler,
+    GaussianSeedSampler,
+    SobolSeedSampler,
+)
+
+
+def _minimal_voronoi(seeds: NDArray) -> Voronoi:
+    """Build a Voronoi tessellation, handling edge cases with too few points.
+
+    Qhull requires at least ``dim + 1`` non-degenerate points. For fewer
+    points we add synthetic jittered seeds to satisfy Qhull, then trim
+    the result.
+    """
+    n, d = seeds.shape
+    if n >= d + 1:
+        try:
+            return Voronoi(seeds)
+        except Exception:
+            pass
+    needed = d + 1 - n
+    if needed > 0:
+        extra = np.eye(d, dtype=float) * 0.05 + 0.5
+        rng = np.random.default_rng(0)
+        jitter = rng.uniform(-0.01, 0.01, size=(d, d))
+        extra = np.clip(extra + jitter, 0, 1)
+        extra = extra[:needed]
+        combined = np.vstack([seeds, extra])
+        vor = Voronoi(combined)
+        return vor
+    return Voronoi(seeds)
 
 
 @dataclass
@@ -30,6 +62,7 @@ class VoronoiPopulation:
     fitness: NDArray
     voronoi: Voronoi
     dim: int
+    rng: np.random.Generator = field(default_factory=np.random.default_rng)
 
     @classmethod
     def from_sampler(
@@ -47,13 +80,14 @@ class VoronoiPopulation:
         seeds = sampler.sample()
         individuals = [individual_factory(s) for s in seeds]
         fitness = np.array([fitness_fn(ind) for ind in individuals])
-        voronoi = Voronoi(seeds)
+        voronoi = _minimal_voronoi(seeds)
         return cls(
             seeds=seeds,
             individuals=individuals,
             fitness=fitness,
             voronoi=voronoi,
             dim=sampler.dim,
+            rng=sampler.rng,
         )
 
     @property
@@ -64,9 +98,10 @@ class VoronoiPopulation:
         """Return the area/volume of each Voronoi cell."""
         from .seeds import seed_region_area
 
+        pr = self.voronoi.point_region
         areas = np.array([
-            seed_region_area(self.voronoi, i)
-            for i in range(len(self.voronoi.point_region))
+            seed_region_area(self.voronoi, pr[i])
+            for i in range(len(pr))
         ])
         return areas
 
@@ -110,19 +145,15 @@ def init_population_from_seeds(
     **sampler_kwargs
         Passed to the chosen SeedSampler.
     """
-    sampler_cls = {
+    registry = {
         "uniform": UniformSeedSampler,
-        "poisson": "PoissonDiskSeedSampler",
-        "gaussian": "GaussianSeedSampler",
-        "sobol": "SobolSeedSampler",
-    }.get(strategy)
-
+        "poisson": PoissonDiskSeedSampler,
+        "gaussian": GaussianSeedSampler,
+        "sobol": SobolSeedSampler,
+    }
+    sampler_cls = registry.get(strategy)
     if sampler_cls is None:
-        raise ValueError(f"Unknown strategy '{strategy}'. Choose from {list(sampler_cls.keys())}")
-
-    if isinstance(sampler_cls, str):
-        from .seeds import PoissonDiskSeedSampler, GaussianSeedSampler, SobolSeedSampler
-        sampler_cls = eval(sampler_cls)
+        raise ValueError(f"Unknown strategy '{strategy}'. Choose from {list(registry)}")
 
     sampler = sampler_cls(n_seeds=n_individuals, dim=dim, **sampler_kwargs)
     return VoronoiPopulation.from_sampler(sampler, individual_factory, fitness_fn)

@@ -56,18 +56,34 @@ class TestVoronoiMutation:
 class TestVoronoiGA:
     def test_step_preserves_size(self):
         pop = make_test_population(20)
-        ga = VoronoiGA(population=pop, rng=np.random.default_rng(42))
+        ga = VoronoiGA(
+            population=pop,
+            individual_factory=dummy_factory,
+            fitness_fn=dummy_fitness,
+            rng=np.random.default_rng(42),
+        )
         new_pop = ga.step()
         assert new_pop.n_individuals == 20
 
     def test_run_returns_history(self):
         pop = make_test_population(20)
-        ga = VoronoiGA(population=pop, rng=np.random.default_rng(42))
+        ga = VoronoiGA(
+            population=pop,
+            individual_factory=dummy_factory,
+            fitness_fn=dummy_fitness,
+            rng=np.random.default_rng(42),
+        )
         history = ga.run(n_generations=5, verbose=False)
         assert len(history) == 5
 
-    def test_fitness_improves(self):
+    def test_fitness_does_not_collapse(self):
         pop = make_test_population(30)
-        ga = VoronoiGA(population=pop, mutation_rate=0.2, rng=np.random.default_rng(42))
+        ga = VoronoiGA(
+            population=pop,
+            mutation_rate=0.2,
+            individual_factory=dummy_factory,
+            fitness_fn=dummy_fitness,
+            rng=np.random.default_rng(42),
+        )
         history = ga.run(n_generations=10, verbose=False)
-        assert history[-1] >= history[0] * 0.5  # should not collapse
+        assert history[-1] >= history[0] * 0.5

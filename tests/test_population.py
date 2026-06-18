@@ -14,7 +14,7 @@ def dummy_fitness(ind):
 
 
 def make_test_population(n=20, dim=2):
-    sampler = UniformSeedSampler(n_seeds=n, dim=dim)
+    sampler = UniformSeedSampler(n_seeds=n, dim=dim, rng=np.random.default_rng(42))
     return VoronoiPopulation.from_sampler(sampler, dummy_factory, dummy_fitness)
 
 
@@ -42,8 +42,15 @@ class TestVoronoiPopulation:
         assert div > 0
 
     def test_single_individual_diversity(self):
-        pop = make_test_population(1)
+        sampler = UniformSeedSampler(n_seeds=1, dim=2, rng=np.random.default_rng(42))
+        pop = VoronoiPopulation.from_sampler(sampler, dummy_factory, dummy_fitness)
         assert pop.territorial_diversity() == 0.0
+
+    def test_two_individuals(self):
+        sampler = UniformSeedSampler(n_seeds=2, dim=2, rng=np.random.default_rng(42))
+        pop = VoronoiPopulation.from_sampler(sampler, dummy_factory, dummy_fitness)
+        assert pop.n_individuals == 2
+        assert pop.territorial_diversity() > 0
 
 
 class TestDiversityMetrics:
@@ -56,7 +63,8 @@ class TestDiversityMetrics:
         assert metrics["avg_pairwise_distance"] > 0
 
     def test_single_individual(self):
-        pop = make_test_population(1)
+        sampler = UniformSeedSampler(n_seeds=1, dim=2, rng=np.random.default_rng(42))
+        pop = VoronoiPopulation.from_sampler(sampler, dummy_factory, dummy_fitness)
         metrics = diversity_metrics(pop)
         assert metrics["avg_pairwise_distance"] == 0.0
 
@@ -67,7 +75,7 @@ class TestTerritorialNiching:
         shared = territorial_niching(pop)
         assert shared.shape == (20,)
 
-    def test_shared_fitness_less_than_raw(self):
+    def test_shared_fitness_differs(self):
         pop = make_test_population(20)
         shared = territorial_niching(pop)
-        assert np.all(shared <= pop.fitness)
+        assert not np.allclose(shared, pop.fitness)

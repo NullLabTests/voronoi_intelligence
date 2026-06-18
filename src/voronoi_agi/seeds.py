@@ -8,7 +8,6 @@ define regions, territories, and population structure in the search space.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
 from typing import Optional
 
 import numpy as np
@@ -17,7 +16,6 @@ from scipy.spatial import Voronoi
 from scipy.stats import qmc
 
 
-@dataclass
 class SeedSampler(ABC):
     """Abstract base for all seed sampling strategies.
 
@@ -25,25 +23,26 @@ class SeedSampler(ABC):
     :math:`[0, 1]^d` that can be used to construct a Voronoi tessellation.
     """
 
-    n_seeds: int
-    dim: int = 2
-    rng: np.random.Generator = field(default_factory=np.random.default_rng)
-    bounds: Optional[NDArray] = None
-
-    def __post_init__(self):
-        if self.bounds is not None:
-            self.bounds = np.asarray(self.bounds, dtype=float)
-            if self.bounds.shape != (self.dim, 2):
+    def __init__(
+        self,
+        n_seeds: int,
+        dim: int = 2,
+        rng: Optional[np.random.Generator] = None,
+        bounds: Optional[NDArray] = None,
+    ):
+        self.n_seeds = n_seeds
+        self.dim = dim
+        self.rng = rng if rng is not None else np.random.default_rng()
+        if bounds is not None:
+            bounds = np.asarray(bounds, dtype=float)
+            if bounds.shape != (self.dim, 2):
                 raise ValueError(
-                    f"bounds must have shape ({self.dim}, 2), got {self.bounds.shape}"
+                    f"bounds must have shape ({self.dim}, 2), got {bounds.shape}"
                 )
+        self.bounds = bounds
 
     @abstractmethod
     def sample(self) -> NDArray:
-        """Return an array of shape (n_seeds, dim) of seed positions.
-
-        Seeds should lie in :math:`[0, 1]^d` (or within *bounds* if set).
-        """
         ...
 
     def _rescale(self, points: NDArray) -> NDArray:
@@ -69,8 +68,18 @@ class PoissonDiskSeedSampler(SeedSampler):
     be at least *radius* apart, producing well-spaced Voronoi cells.
     """
 
-    radius: float = 0.05
-    max_attempts: int = 1000
+    def __init__(
+        self,
+        n_seeds: int,
+        dim: int = 2,
+        rng: Optional[np.random.Generator] = None,
+        bounds: Optional[NDArray] = None,
+        radius: float = 0.05,
+        max_attempts: int = 1000,
+    ):
+        super().__init__(n_seeds, dim, rng, bounds)
+        self.radius = radius
+        self.max_attempts = max_attempts
 
     def sample(self) -> NDArray:
         points: list[NDArray] = []
@@ -96,8 +105,18 @@ class GaussianSeedSampler(SeedSampler):
     promising areas of the search space.
     """
 
-    n_centers: int = 3
-    cluster_std: float = 0.15
+    def __init__(
+        self,
+        n_seeds: int,
+        dim: int = 2,
+        rng: Optional[np.random.Generator] = None,
+        bounds: Optional[NDArray] = None,
+        n_centers: int = 3,
+        cluster_std: float = 0.15,
+    ):
+        super().__init__(n_seeds, dim, rng, bounds)
+        self.n_centers = n_centers
+        self.cluster_std = cluster_std
 
     def sample(self) -> NDArray:
         centers = self.rng.uniform(0.0, 1.0, size=(self.n_centers, self.dim))
@@ -109,6 +128,32 @@ class GaussianSeedSampler(SeedSampler):
             )
             points[i] = np.clip(pt, 0.0, 1.0)
         return self._rescale(points)
+
+
+class SphericalSeedSampler(SeedSampler):
+    """Seeds sampled uniformly on the surface of a hypersphere.
+
+    Useful for search spaces where direction matters more than magnitude
+    (e.g., prompt embedding directions, normalised feature vectors).
+    """
+
+    def __init__(
+        self,
+        n_seeds: int,
+        dim: int = 2,
+        rng: Optional[np.random.Generator] = None,
+        bounds: Optional[NDArray] = None,
+        radius: float = 1.0,
+    ):
+        super().__init__(n_seeds, dim, rng, bounds)
+        self.radius = radius
+
+    def sample(self) -> NDArray:
+        points = self.rng.normal(0, 1, size=(self.n_seeds, self.dim))
+        norms = np.linalg.norm(points, axis=1, keepdims=True)
+        points = points / norms * self.radius
+        points = (points + self.radius) / (2 * self.radius)
+        return self._rescale(np.clip(points, 0.0, 1.0))
 
 
 class SobolSeedSampler(SeedSampler):
@@ -131,6 +176,8 @@ class SobolSeedSampler(SeedSampler):
 
 def seed_region_area(vor: Voronoi, region_idx: int) -> float:
     """Return the area (2D) or volume (nD) of a single Voronoi region."""
+    if region_idx < 0 or region_idx >= len(vor.regions):
+        return 0.0
     region = vor.regions[region_idx]
     if -1 in region or len(region) == 0:
         return 0.0

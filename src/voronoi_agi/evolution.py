@@ -12,9 +12,7 @@ from typing import Any, Callable, Optional
 
 import numpy as np
 from numpy.typing import NDArray
-from scipy.spatial import Voronoi
-
-from .population import VoronoiPopulation
+from .population import VoronoiPopulation, _minimal_voronoi
 
 
 @dataclass
@@ -29,79 +27,61 @@ class VoronoiGA:
     mutation_rate: float = 0.1
     crossover_rate: float = 0.8
     elite_fraction: float = 0.1
+    individual_factory: Optional[Callable[[NDArray], Any]] = None
+    fitness_fn: Optional[Callable[[Any], float]] = None
     rng: np.random.Generator = field(default_factory=np.random.default_rng)
 
     def step(self) -> VoronoiPopulation:
         """Run one generation of the Voronoi-enhanced GA."""
         pop = self.population
         n = pop.n_individuals
+        if n < 2:
+            return pop
         n_elite = max(1, int(n * self.elite_fraction))
 
-        # Elitism — keep the best individuals
         elite_idx = np.argsort(pop.fitness)[::-1][:n_elite]
         elite_seeds = pop.seeds[elite_idx]
         elite_individuals = [pop.individuals[i] for i in elite_idx]
         elite_fitness = pop.fitness[elite_idx]
 
-        # Selection — territory-aware tournament
         parent_idx = voronoi_selection(pop, n_parents=n)
+        factory = self.individual_factory or (lambda s: s)
+        fitness_fn = self.fitness_fn or (lambda _: 0.0)
 
-        # Crossover & mutation
         offspring_seeds: list[NDArray] = []
         offspring_individuals: list[Any] = []
-
-        individual_factory = _get_factory(pop)
 
         for i in range(0, len(parent_idx) - 1, 2):
             p1, p2 = parent_idx[i], parent_idx[i + 1]
             if self.rng.uniform() < self.crossover_rate:
-                c1, c2 = _voronoi_crossover(
-                    pop.seeds[p1], pop.seeds[p2], self.rng
-                )
+                c1, c2 = _voronoi_crossover(pop.seeds[p1], pop.seeds[p2], self.rng)
             else:
                 c1, c2 = pop.seeds[p1].copy(), pop.seeds[p2].copy()
 
             for c in (c1, c2):
-                c = voronoi_mutation(
-                    c,
-                    self.mutation_rate,
-                    pop,
-                    self.rng,
-                )
+                c = voronoi_mutation(c, self.mutation_rate, pop, self.rng)
                 offspring_seeds.append(c)
-                offspring_individuals.append(individual_factory(c))
+                offspring_individuals.append(factory(c))
 
-        # Maintain population size
         while len(offspring_seeds) < n - n_elite:
             idx = self.rng.integers(0, len(pop.seeds))
-            c = voronoi_mutation(
-                pop.seeds[idx].copy(),
-                self.mutation_rate * 2,
-                pop,
-                self.rng,
-            )
+            c = voronoi_mutation(pop.seeds[idx].copy(), self.mutation_rate * 2, pop, self.rng)
             offspring_seeds.append(c)
-            offspring_individuals.append(individual_factory(c))
+            offspring_individuals.append(factory(c))
 
-        # Re-evaluate fitness
-        fitness_fn = _get_fitness_fn(pop)
         offspring_fitness = np.array([fitness_fn(ind) for ind in offspring_individuals])
 
-        # Rebuild population
         all_seeds = np.vstack([elite_seeds, np.array(offspring_seeds[: n - n_elite])])
         all_individuals = elite_individuals + offspring_individuals[: n - n_elite]
-
-        if callable(getattr(pop.individuals[0], "__copy__", None)):
-            all_fitness = np.array([fitness_fn(ind) for ind in all_individuals])
-        else:
-            all_fitness = np.concatenate([elite_fitness, offspring_fitness[: n - n_elite]])
+        all_fitness = np.concatenate([elite_fitness, offspring_fitness[: n - n_elite]])
 
         self.population = VoronoiPopulation(
             seeds=all_seeds,
             individuals=all_individuals,
             fitness=all_fitness,
-            voronoi=Voronoi(all_seeds),
+            voronoi=_minimal_voronoi(all_seeds),
             dim=pop.dim,
+            rng=self.rng,
         )
         return self.population
 
@@ -116,27 +96,6 @@ class VoronoiGA:
                 mean = float(np.mean(self.population.fitness))
                 print(f"Gen {g:4d}  best={best:.6f}  mean={mean:.6f}")
         return history
-
-
-def _get_factory(pop: VoronoiPopulation) -> Callable:
-    """Try to recover the individual factory from the population's individuals."""
-    original = pop.individuals[0]
-    if hasattr(original, "__class__") and hasattr(original, "__init__"):
-        # Best-effort: create a closure that stores the seed
-        def factory(seed):
-            return type(original).__new__(type(original))
-
-        return factory
-    return lambda seed: seed
-
-
-def _get_fitness_fn(pop: VoronoiPopulation) -> Callable:
-    """Placeholder — in practice the user should supply this."""
-
-    def default_fitness(ind):
-        return 0.0
-
-    return default_fitness
 
 
 # ---------------------------------------------------------------------------
@@ -161,7 +120,6 @@ def voronoi_selection(
     parents: list[int] = []
     while len(parents) < n_parents:
         candidates = pop.rng.integers(0, pop.n_individuals, size=tournament_size)
-        # Weighted by fitness * (1 / density) to favour sparse areas
         scores = pop.fitness[candidates] * density_weights[candidates]
         winner = candidates[int(np.argmax(scores))]
         parents.append(winner)
@@ -190,13 +148,17 @@ def voronoi_mutation(
     if rng.uniform() > mutation_rate:
         return seed
 
-    # Find which Voronoi cell this seed belongs to
     vor = population.voronoi
     point_region = _nearest_seed(seed, population.seeds)
-    region_idx = vor.point_region[point_region]
-    region = vor.regions[region_idx]
 
-    if -1 in region or len(region) == 0:
+    if point_region < len(vor.point_region):
+        region_idx = vor.point_region[point_region]
+        region = vor.regions[region_idx] if region_idx < len(vor.regions) else []
+    else:
+        region = []
+        region_idx = -1
+
+    if region_idx == -1 or -1 in region or len(region) == 0:
         step_size = 0.1 / np.sqrt(population.dim)
     else:
         verts = vor.vertices[region]

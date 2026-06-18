@@ -148,12 +148,11 @@ def voronoi_heatmap(
     resolution : grid size (resolution x resolution)
     """
     import matplotlib.pyplot as plt
-    from scipy.spatial import Voronoi, cKDTree
+    from scipy.spatial import cKDTree
 
     if ax is None:
         _, ax = plt.subplots(figsize=(8, 8))
 
-    vor = Voronoi(seeds)
     tree = cKDTree(seeds)
 
     x = np.linspace(0, 1, resolution)
@@ -227,3 +226,54 @@ def animate_evolution(
         ani.save(save_path, writer="pillow", fps=1000 // interval)
 
     return ani
+
+
+def plot_high_dim_projection(
+    seeds: NDArray,
+    values: Optional[NDArray] = None,
+    method: str = "pca",
+    title: str = "High-D Seed Projection",
+    ax: Any = None,
+) -> Any:
+    """Project high-dimensional seeds to 2D via PCA or t-SNE for visualisation.
+
+    Parameters
+    ----------
+    seeds : ndarray (n, d) with d > 2
+    values : ndarray (n,) or None — colours the points.
+    method : "pca" or "tsne"
+    title, ax : formatting.
+
+    Returns
+    -------
+    matplotlib Axes
+    """
+    import matplotlib.pyplot as plt
+
+    if ax is None:
+        _, ax = plt.subplots(figsize=(8, 6))
+
+    if seeds.shape[1] > 2:
+        if method == "tsne":
+            try:
+                from sklearn.manifold import TSNE
+                proj = TSNE(n_components=2, random_state=42, perplexity=min(30, seeds.shape[0] - 1)).fit_transform(seeds)
+            except ImportError:
+                method = "pca"
+
+        if method == "pca":
+            from sklearn.decomposition import PCA
+            proj = PCA(n_components=2).fit_transform(seeds)
+    else:
+        proj = seeds
+
+    if values is not None:
+        sc = ax.scatter(proj[:, 0], proj[:, 1], c=values, cmap="plasma", s=50, edgecolors="k", alpha=0.8)
+        plt.colorbar(sc, ax=ax)
+    else:
+        ax.scatter(proj[:, 0], proj[:, 1], s=50, edgecolors="k", alpha=0.8)
+
+    ax.set_title(title)
+    ax.set_xlabel(f"{method.upper()} 1")
+    ax.set_ylabel(f"{method.upper()} 2")
+    return ax
