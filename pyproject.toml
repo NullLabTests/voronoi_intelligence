@@ -1,0 +1,59 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "voronoi_intelligence"
+version = "0.1.0"
+description = "Voronoi-based seed management for evolutionary algorithms, agent populations, and spatial reasoning in AGI research."
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+authors = [
+    {name = "NullLabTests", email = "creatorplntu@proton.me"},
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Mathematics",
+]
+keywords = [
+    "voronoi",
+    "evolutionary-algorithms",
+    "multi-agent-systems",
+    "artificial-general-intelligence",
+    "population-diversity",
+    "novelty-search",
+    "spatial-reasoning",
+]
+dependencies = [
+    "numpy>=1.24",
+    "scipy>=1.10",
+    "matplotlib>=3.7",
+]
+optional-dependencies = {
+    "dev" = [
+        "pytest>=7",
+        "pytest-cov>=4",
+        "ruff>=0.1",
+    ],
+    "viz" = [
+        "plotly>=5.15",
+    ],
+    "ml" = [
+        "scikit-learn>=1.3",
+    ],
+}
+
+[project.urls]
+Homepage = "https://github.com/NullLabTests/voronoi_intelligence"
+Repository = "https://github.com/NullLabTests/voronoi_intelligence"
+Issues = "https://github.com/NullLabTests/voronoi_intelligence/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
