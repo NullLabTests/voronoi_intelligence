@@ -119,6 +119,35 @@ class VoronoiPopulation:
             return 0.0
         return float(np.mean(pdist(self.seeds)))
 
+    def cell_neighbors(self) -> list[list[int]]:
+        """Return adjacency list: ``neighbors[i]`` lists indices of cells adjacent to cell *i*.
+
+        Two cells are neighbours if they share a Voronoi ridge (edge in 2D).
+        """
+        n = len(self.seeds)
+        neighbors: list[list[int]] = [[] for _ in range(n)]
+        for (i, j) in self.voronoi.ridge_points:
+            if i < n and j < n:
+                neighbors[i].append(int(j))
+                neighbors[j].append(int(i))
+        return [list(set(nb)) for nb in neighbors]
+
+    def cell_vertices(self) -> list[NDArray]:
+        """Return the vertex array for each bounded Voronoi cell.
+
+        Unbounded cells return an empty array.
+        """
+        verts_list: list[NDArray] = []
+        for i in range(len(self.seeds)):
+            region_idx = self.voronoi.point_region[i]
+            if region_idx < len(self.voronoi.regions):
+                region = self.voronoi.regions[region_idx]
+                if -1 not in region and len(region) > 0:
+                    verts_list.append(self.voronoi.vertices[region])
+                    continue
+            verts_list.append(np.array([]))
+        return verts_list
+
 
 def init_population_from_seeds(
     n_individuals: int,

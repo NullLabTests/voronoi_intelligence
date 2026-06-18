@@ -23,6 +23,8 @@ from .population import (
     territorial_niching,
 )
 from .evolution import (
+    StandardGA,
+    FitnessSharingGA,
     VoronoiGA,
     voronoi_selection,
     voronoi_mutation,
@@ -57,6 +59,8 @@ __all__ = [
     "init_population_from_seeds",
     "diversity_metrics",
     "territorial_niching",
+    "StandardGA",
+    "FitnessSharingGA",
     "VoronoiGA",
     "voronoi_selection",
     "voronoi_mutation",

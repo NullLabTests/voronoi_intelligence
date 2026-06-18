@@ -52,6 +52,20 @@ class TestVoronoiPopulation:
         assert pop.n_individuals == 2
         assert pop.territorial_diversity() > 0
 
+    def test_cell_neighbors(self):
+        pop = make_test_population(20)
+        neighbors = pop.cell_neighbors()
+        assert len(neighbors) == 20
+        for nb in neighbors:
+            assert all(isinstance(n, int) for n in nb)
+            assert all(0 <= n < 20 for n in nb)
+
+    def test_cell_vertices(self):
+        pop = make_test_population(20)
+        verts = pop.cell_vertices()
+        assert len(verts) == 20
+        assert any(len(v) > 0 for v in verts)
+
 
 class TestDiversityMetrics:
     def test_metrics_return_dict(self):
