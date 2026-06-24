@@ -1,42 +1,23 @@
-# Byte-compiled / cached
+# Byte-compiled
 __pycache__/
 *.py[cod]
 *$py.class
 
-# Virtual environments
+# Env
+.env
+.venv
 venv/
-.venv/
-env/
-.env/
-
-# Distribution / packaging
-dist/
-build/
-*.egg-info/
-*.egg
 
 # IDE
 .vscode/
 .idea/
 *.swp
-*.swo
-*~
 
 # OS
 .DS_Store
 Thumbs.db
 
-# Jupyter
-.ipynb_checkpoints/
-
-# Coverage
-htmlcov/
-.coverage
-.coverage.*
-coverage.xml
-
-# Ruff / linting
-.ruff_cache/
-
-# Generated files
-examples/*.gif
+# Build
+dist/
+build/
+*.egg-info/
