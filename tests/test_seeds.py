@@ -1,5 +1,6 @@
 """Tests for the seeds module — including new samplers."""
 
+import pytest
 import numpy as np
 from voronoi_agi.seeds import (
     UniformSeedSampler,
@@ -97,6 +98,7 @@ class TestLloyd:
 
 class TestHighDimProjection:
     def test_pca_projection(self):
+        pytest.importorskip("sklearn")
         seeds = np.random.uniform(0, 1, (30, 10))
         import matplotlib
 
