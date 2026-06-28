@@ -18,8 +18,6 @@ from .population import _minimal_voronoi
 from .utils import _point_in_convex_polygon as pip
 
 
-
-
 def centroidal_voronoi_tessellation(
     seeds: NDArray,
     n_iterations: int = 50,
@@ -162,9 +160,11 @@ class MultiAgentCoverage:
                 verts = self.voronoi.vertices[region]
                 if verts.shape[1] == 2:
                     from .seeds import _polygon_area
+
                     area = _polygon_area(verts)
                 else:
                     from .seeds import _convex_hull_volume
+
                     area = _convex_hull_volume(verts)
 
             ridge_points = self.voronoi.ridge_points
@@ -258,9 +258,11 @@ def territorial_assignment(
             verts = vor.vertices[region]
             if verts.shape[1] == 2:
                 from .seeds import _polygon_area
+
                 area = _polygon_area(verts)
             else:
                 from .seeds import _convex_hull_volume
+
                 area = _convex_hull_volume(verts)
 
         neighbours = []
@@ -280,6 +282,3 @@ def territorial_assignment(
             )
         )
     return vor, territories
-
-
-

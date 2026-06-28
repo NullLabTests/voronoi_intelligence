@@ -14,6 +14,7 @@ from voronoi_agi.visualization import plot_territorial_coverage
 N_AGENTS = 8
 N_STEPS = 50
 
+
 # Density field: Gaussian bump at centre
 def density_field(x: np.ndarray) -> float:
     centre = np.array([0.5, 0.5])
@@ -32,10 +33,7 @@ def centroid_policy(position: np.ndarray, vertices: np.ndarray) -> np.ndarray:
 
 # Initialise agents
 rng = np.random.default_rng(42)
-agents = [
-    TerritorialAgent(agent_id=i, position=rng.uniform(0, 1, 2))
-    for i in range(N_AGENTS)
-]
+agents = [TerritorialAgent(agent_id=i, position=rng.uniform(0, 1, 2)) for i in range(N_AGENTS)]
 
 coverage = MultiAgentCoverage(agents=agents)
 

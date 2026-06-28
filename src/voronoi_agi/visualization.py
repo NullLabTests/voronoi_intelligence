@@ -93,9 +93,7 @@ def plot_population_diversity(
         values = population.cell_areas()
         cmap = "viridis"
 
-    scatter = ax.scatter(
-        seeds[:, 0], seeds[:, 1], c=values, cmap=cmap, s=50, edgecolors="k", alpha=0.8
-    )
+    scatter = ax.scatter(seeds[:, 0], seeds[:, 1], c=values, cmap=cmap, s=50, edgecolors="k", alpha=0.8)
     plt.colorbar(scatter, ax=ax, label=colour_by)
     ax.set_title(title)
     ax.set_xlabel("Dimension 1")
@@ -120,9 +118,7 @@ def plot_territorial_coverage(
     for i, (agent, territory) in enumerate(zip(coverage.agents, coverage.territories)):
         ax.plot(agent.position[0], agent.position[1], "o", color=colours[i], markersize=8)
         if len(territory.vertices) >= 3:
-            poly = MplPolygon(
-                territory.vertices, closed=True, color=colours[i], alpha=0.15, ec="k", lw=0.5
-            )
+            poly = MplPolygon(territory.vertices, closed=True, color=colours[i], alpha=0.15, ec="k", lw=0.5)
             ax.add_patch(poly)
 
     ax.set_title(title)
@@ -209,18 +205,14 @@ def animate_evolution(
         vor = Voronoi(seeds)
         voronoi_plot_2d(vor, ax=ax, show_vertices=False, show_points=False)
 
-        scatter = ax.scatter(
-            seeds[:, 0], seeds[:, 1], c=fitness, cmap="plasma", s=50, edgecolors="k"
-        )
+        scatter = ax.scatter(seeds[:, 0], seeds[:, 1], c=fitness, cmap="plasma", s=50, edgecolors="k")
         ax.set_title(f"Generation {frame}")
         ax.set_xlim(0, 1)
         ax.set_ylim(0, 1)
         ax.set_aspect("equal")
         return [scatter]
 
-    ani = animation.FuncAnimation(
-        fig, update, frames=len(seed_history), interval=interval, blit=False
-    )
+    ani = animation.FuncAnimation(fig, update, frames=len(seed_history), interval=interval, blit=False)
 
     if save_path:
         ani.save(save_path, writer="pillow", fps=1000 // interval)
@@ -257,12 +249,16 @@ def plot_high_dim_projection(
         if method == "tsne":
             try:
                 from sklearn.manifold import TSNE
-                proj = TSNE(n_components=2, random_state=42, perplexity=min(30, seeds.shape[0] - 1)).fit_transform(seeds)
+
+                proj = TSNE(n_components=2, random_state=42, perplexity=min(30, seeds.shape[0] - 1)).fit_transform(
+                    seeds
+                )
             except ImportError:
                 method = "pca"
 
         if method == "pca":
             from sklearn.decomposition import PCA
+
             proj = PCA(n_components=2).fit_transform(seeds)
     else:
         proj = seeds

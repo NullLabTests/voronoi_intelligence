@@ -8,7 +8,6 @@ Voronoi cell structure maintains diversity across prompt space.
 
 import numpy as np
 
-from voronoi_agi.population import diversity_metrics
 from voronoi_agi.seeds import UniformSeedSampler, PoissonDiskSeedSampler
 
 # In a real system, these would be LLM prompt embeddings.

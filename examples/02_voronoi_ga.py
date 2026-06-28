@@ -10,10 +10,6 @@ import numpy as np
 
 from voronoi_agi.evolution import VoronoiGA, StandardGA, FitnessSharingGA
 from voronoi_agi.benchmarks import (
-    sphere,
-    rastrigin,
-    ackley,
-    rosenbrock,
     FUNCTIONS,
 )
 
@@ -61,6 +57,7 @@ for ax, (fn_name, fn) in zip(axes.flat, FUNCTIONS.items()):
 
 plt.tight_layout()
 import os
+
 save_path = os.path.join(os.path.dirname(__file__), "..", "docs", "benchmark_comparison.png")
 plt.savefig(save_path, dpi=150, bbox_inches="tight")
 print(f"\nSaved benchmark plot to {save_path}")

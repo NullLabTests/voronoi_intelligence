@@ -54,5 +54,12 @@ Homepage = "https://github.com/NullLabTests/voronoi_intelligence"
 Repository = "https://github.com/NullLabTests/voronoi_intelligence"
 Issues = "https://github.com/NullLabTests/voronoi_intelligence/issues"
 
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+ignore = ["E402", "E501"]
+
 [tool.setuptools.packages.find]
 where = ["src"]

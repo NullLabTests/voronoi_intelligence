@@ -20,7 +20,7 @@ def rastrigin(x: np.ndarray) -> float:
     scaled = x * 10 - 5
     d = len(scaled)
     A = 10.0
-    return -(A * d + np.sum(scaled ** 2 - A * np.cos(2 * np.pi * scaled)))
+    return -(A * d + np.sum(scaled**2 - A * np.cos(2 * np.pi * scaled)))
 
 
 def make_test_population(n=20, dim=2):
@@ -119,7 +119,9 @@ class TestVoronoiGA:
         assert history[-1] >= history[0]
 
     def test_neighbor_crossover_runs(self):
-        ga = VoronoiGA(pop_size=20, dim=2, fitness_fn=sphere, neighbor_crossover_only=True, rng=np.random.default_rng(42))
+        ga = VoronoiGA(
+            pop_size=20, dim=2, fitness_fn=sphere, neighbor_crossover_only=True, rng=np.random.default_rng(42)
+        )
         ga._init_pop()
         ga.step()
         assert ga.population.n_individuals == 20

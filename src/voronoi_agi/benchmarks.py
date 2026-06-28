@@ -36,14 +36,14 @@ def rastrigin(x: NDArray) -> float:
     scaled = x * 10 - 5
     d = len(scaled)
     A = 10.0
-    return -(A * d + np.sum(scaled ** 2 - A * np.cos(2 * np.pi * scaled)))
+    return -(A * d + np.sum(scaled**2 - A * np.cos(2 * np.pi * scaled)))
 
 
 def ackley(x: NDArray) -> float:
     """Ackley: steep outer, flat centre, optimum at (0.5, ..., 0.5)."""
     shifted = x - 0.5
     d = len(shifted)
-    sum_sq = np.sum(shifted ** 2)
+    sum_sq = np.sum(shifted**2)
     sum_cos = np.sum(np.cos(2 * np.pi * shifted))
     val = -20.0 * np.exp(-0.2 * np.sqrt(sum_sq / d)) - np.exp(sum_cos / d) + 20.0 + np.e
     return -float(val)
@@ -53,10 +53,7 @@ def rosenbrock(x: NDArray) -> float:
     """Rosenbrock valley: narrow ridge, optimum at (0.5, ..., 0.5)."""
     shifted = x * 10 - 5 + 1  # shift so optimum of original is at x=1 → x=0.5 in [0,1]
     d = len(shifted)
-    val = sum(
-        100.0 * (shifted[i + 1] - shifted[i] ** 2) ** 2 + (1.0 - shifted[i]) ** 2
-        for i in range(d - 1)
-    )
+    val = sum(100.0 * (shifted[i + 1] - shifted[i] ** 2) ** 2 + (1.0 - shifted[i]) ** 2 for i in range(d - 1))
     return -float(val)
 
 
@@ -113,6 +110,7 @@ def run_single(
     if hasattr(ga, "population"):
         pop = ga.population
         from scipy.spatial.distance import pdist
+
         diversity = float(np.mean(pdist(pop.seeds))) if pop.n_individuals > 1 else 0.0
     else:
         diversity = 0.0

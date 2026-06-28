@@ -15,6 +15,7 @@ def normalize(points: NDArray, eps: float = 1e-12) -> NDArray:
 def pairwise_distances(points: NDArray) -> NDArray:
     """Compute pairwise Euclidean distances between all points."""
     from scipy.spatial.distance import pdist, squareform
+
     return squareform(pdist(points))
 
 

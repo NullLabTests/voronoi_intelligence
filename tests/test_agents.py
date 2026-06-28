@@ -30,10 +30,7 @@ class TestTerritorialAgent:
 class TestMultiAgentCoverage:
     def _make_agents(self, n=5):
         rng = np.random.default_rng(42)
-        return [
-            TerritorialAgent(agent_id=i, position=rng.uniform(0.1, 0.9, 2))
-            for i in range(n)
-        ]
+        return [TerritorialAgent(agent_id=i, position=rng.uniform(0.1, 0.9, 2)) for i in range(n)]
 
     def test_init_creates_territories(self):
         agents = self._make_agents(5)

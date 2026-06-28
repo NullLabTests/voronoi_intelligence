@@ -99,10 +99,7 @@ class VoronoiPopulation:
         from .seeds import seed_region_area
 
         pr = self.voronoi.point_region
-        areas = np.array([
-            seed_region_area(self.voronoi, pr[i])
-            for i in range(len(pr))
-        ])
+        areas = np.array([seed_region_area(self.voronoi, pr[i]) for i in range(len(pr))])
         return areas
 
     def cell_density(self) -> NDArray:
@@ -126,7 +123,7 @@ class VoronoiPopulation:
         """
         n = len(self.seeds)
         neighbors: list[list[int]] = [[] for _ in range(n)]
-        for (i, j) in self.voronoi.ridge_points:
+        for i, j in self.voronoi.ridge_points:
             if i < n and j < n:
                 neighbors[i].append(int(j))
                 neighbors[j].append(int(i))
@@ -248,6 +245,7 @@ def territorial_niching(
     """
     if fitness_share_radius is None:
         from scipy.spatial.distance import pdist
+
         if population.n_individuals > 1:
             distances = pdist(population.seeds)
             fitness_share_radius = float(np.median(distances)) * 0.5

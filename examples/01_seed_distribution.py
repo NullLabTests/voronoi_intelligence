@@ -2,7 +2,6 @@
 """Example 1: Compare different seed sampling strategies visually."""
 
 import matplotlib.pyplot as plt
-import numpy as np
 
 from voronoi_agi.seeds import (
     UniformSeedSampler,

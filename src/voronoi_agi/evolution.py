@@ -65,7 +65,9 @@ class StandardGA:
         beta = 1.0 + 2.0 * np.minimum(p1, p2) / (diff + 1e-12)
         alpha = 2.0 - beta ** (-eta - 1.0)
         u = self.rng.uniform(size=self.dim)
-        beta_q = np.where(u <= 1.0 / alpha, (alpha * u) ** (1.0 / (eta + 1.0)), (1.0 / (2.0 - alpha * u)) ** (1.0 / (eta + 1.0)))
+        beta_q = np.where(
+            u <= 1.0 / alpha, (alpha * u) ** (1.0 / (eta + 1.0)), (1.0 / (2.0 - alpha * u)) ** (1.0 / (eta + 1.0))
+        )
         c1 = 0.5 * ((p1 + p2) - beta_q * diff)
         c2 = 0.5 * ((p1 + p2) + beta_q * diff)
         return self._clip(c1), self._clip(c2)
@@ -261,7 +263,12 @@ class VoronoiGA:
         fitness = np.array([self.fitness_fn(s) for s in seeds])
         vor = _minimal_voronoi(seeds)
         return VoronoiPopulation(
-            seeds=seeds, individuals=individuals, fitness=fitness, voronoi=vor, dim=self.dim, rng=self.rng,
+            seeds=seeds,
+            individuals=individuals,
+            fitness=fitness,
+            voronoi=vor,
+            dim=self.dim,
+            rng=self.rng,
         )
 
     def step(self) -> VoronoiPopulation:
@@ -401,9 +408,11 @@ def voronoi_mutation(
         verts = vor.vertices[region]
         if verts.shape[1] == 2:
             from .seeds import _polygon_area
+
             area = _polygon_area(verts)
         else:
             from .seeds import _convex_hull_volume
+
             area = _convex_hull_volume(verts)
         step_size = np.sqrt(max(area, 1e-12)) / 5.0
 

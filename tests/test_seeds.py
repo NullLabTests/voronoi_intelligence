@@ -81,6 +81,7 @@ class TestLloyd:
 
     def test_centroidal_reduces_imbalance(self):
         from voronoi_agi.agents import MultiAgentCoverage, TerritorialAgent
+
         rng = np.random.default_rng(42)
         positions = rng.uniform(0, 1, (10, 2))
         agents = [TerritorialAgent(agent_id=i, position=p) for i, p in enumerate(positions)]
@@ -98,8 +99,10 @@ class TestHighDimProjection:
     def test_pca_projection(self):
         seeds = np.random.uniform(0, 1, (30, 10))
         import matplotlib
+
         matplotlib.use("Agg")
         ax = plot_high_dim_projection(seeds, method="pca")
         assert ax is not None
         import matplotlib.pyplot as plt
+
         plt.close("all")

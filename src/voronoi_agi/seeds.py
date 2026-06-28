@@ -36,14 +36,11 @@ class SeedSampler(ABC):
         if bounds is not None:
             bounds = np.asarray(bounds, dtype=float)
             if bounds.shape != (self.dim, 2):
-                raise ValueError(
-                    f"bounds must have shape ({self.dim}, 2), got {bounds.shape}"
-                )
+                raise ValueError(f"bounds must have shape ({self.dim}, 2), got {bounds.shape}")
         self.bounds = bounds
 
     @abstractmethod
-    def sample(self) -> NDArray:
-        ...
+    def sample(self) -> NDArray: ...
 
     def _rescale(self, points: NDArray) -> NDArray:
         if self.bounds is not None:
@@ -86,9 +83,7 @@ class PoissonDiskSeedSampler(SeedSampler):
         attempts = 0
         while len(points) < self.n_seeds and attempts < self.max_attempts:
             candidate = self.rng.uniform(0.0, 1.0, size=self.dim)
-            if all(
-                np.linalg.norm(candidate - p) >= self.radius for p in points
-            ):
+            if all(np.linalg.norm(candidate - p) >= self.radius for p in points):
                 points.append(candidate)
             attempts += 1
         if len(points) < self.n_seeds:
@@ -123,9 +118,7 @@ class GaussianSeedSampler(SeedSampler):
         assignments = self.rng.integers(0, self.n_centers, size=self.n_seeds)
         points = np.zeros((self.n_seeds, self.dim))
         for i in range(self.n_seeds):
-            pt = centers[assignments[i]] + self.rng.normal(
-                0, self.cluster_std, size=self.dim
-            )
+            pt = centers[assignments[i]] + self.rng.normal(0, self.cluster_std, size=self.dim)
             points[i] = np.clip(pt, 0.0, 1.0)
         return self._rescale(points)
 
@@ -204,5 +197,6 @@ def _polygon_area(vertices: NDArray) -> float:
 def _convex_hull_volume(vertices: NDArray) -> float:
     """Approximate volume via convex hull (scipy)."""
     from scipy.spatial import ConvexHull
+
     hull = ConvexHull(vertices)
     return hull.volume
